@@ -76,10 +76,22 @@ const SoundButton = styled.button<{ isEnabled: boolean }>`
   cursor: pointer;
   color: ${props => props.isEnabled ? '#3498db' : '#95a5a6'};
   transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: ${props => props.isEnabled ? 'rgba(52, 152, 219, 0.1)' : 'transparent'};
   
   &:hover {
     color: ${props => props.isEnabled ? '#2980b9' : '#7f8c8d'};
+    background-color: ${props => props.isEnabled ? 'rgba(52, 152, 219, 0.2)' : 'rgba(0, 0, 0, 0.05)'};
   }
+`;
+
+const SoundText = styled.span`
+  font-size: 0.8rem;
+  font-weight: 500;
 `;
 
 const DifficultyIndicator = styled.div`
@@ -207,6 +219,21 @@ const Game: React.FC<GameProps> = ({ onScoreChange, onStreakChange }) => {
     initSoundEffects();
     setSoundOn(isSoundEnabled());
     generateNewPattern();
+    
+    // Add a click handler to the document to help with audio initialization
+    const handleInitialClick = () => {
+      console.log('Initial user interaction detected');
+      // Try to play a silent sound to unlock audio
+      const audio = new Audio();
+      audio.volume = 0;
+      audio.play().catch(e => console.log('Silent audio play:', e));
+    };
+    
+    document.addEventListener('click', handleInitialClick, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', handleInitialClick);
+    };
   }, [generateNewPattern]);
   
   // Update difficulty based on streak
@@ -250,8 +277,16 @@ const Game: React.FC<GameProps> = ({ onScoreChange, onStreakChange }) => {
   };
   
   const handleSoundToggle = () => {
+    console.log('Sound toggle button clicked');
     const newSoundState = toggleSound();
     setSoundOn(newSoundState);
+    
+    // Try to play a sound immediately to test if it works
+    if (newSoundState) {
+      setTimeout(() => {
+        playClickSound();
+      }, 100);
+    }
   };
   
   return (
@@ -293,6 +328,7 @@ const Game: React.FC<GameProps> = ({ onScoreChange, onStreakChange }) => {
           onClick={handleSoundToggle}
         >
           {soundOn ? '🔊' : '🔇'}
+          <SoundText>{soundOn ? 'Sound On' : 'Sound Off'}</SoundText>
         </SoundButton>
         <DifficultyIndicator>
           <DifficultyText>Difficulty:</DifficultyText>
